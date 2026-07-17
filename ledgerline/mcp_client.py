@@ -96,7 +96,7 @@ class DataHubMCP:
         )
 
     def list_schema_fields(self, urn: str) -> Any:
-        return self.call("list_schema_fields", {"dataset_urn": urn})
+        return self.call("list_schema_fields", {"urn": urn})
 
     def get_entities(self, urns: list[str]) -> Any:
         return self.call("get_entities", {"urns": urns})
