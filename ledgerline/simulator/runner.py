@@ -128,6 +128,8 @@ def run(
                 candidates = sorted(world.descendants(dataset))
                 blast = world.blast_set(dataset, dropped)
                 for agent in agents:
+                    if not hasattr(agent, "on_schema_change"):
+                        continue
                     for cand, will_break, conf in agent.on_schema_change(
                         world, dataset, dropped, candidates
                     ):
@@ -167,6 +169,8 @@ def run(
                 candidates = sorted(world.ancestors(dataset))
                 open_incidents[incident_urn] = h.payload
                 for agent in agents:
+                    if not hasattr(agent, "on_incident"):
+                        continue
                     pick, conf = agent.on_incident(
                         world, incident_urn, dataset, candidates
                     )
@@ -199,6 +203,8 @@ def run(
             elif h.kind == ENRICHMENT_PASS:
                 for dataset_obj, column in world.undocumented():
                     for agent in agents:
+                        if not hasattr(agent, "on_enrichment"):
+                            continue
                         description, conf = agent.on_enrichment(
                             world, dataset_obj.name, column.name
                         )
@@ -239,6 +245,8 @@ def run(
                 continue
             history = observed_history(tl, dataset, before_day=day)
             for agent in agents:
+                if not hasattr(agent, "on_sla_forecast"):
+                    continue
                 will_miss, conf = agent.on_sla_forecast(world, dataset, history)
                 will_miss, conf = normalize_directional(will_miss, conf)
                 store.record(
