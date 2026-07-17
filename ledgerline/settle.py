@@ -163,6 +163,13 @@ def _statement_truth(claim: Claim, event: GroundTruthEvent) -> Optional[bool]:
             return None
         if event.payload.get("column") != claim.prediction.get("column"):
             return None
+        # Reviews are of a specific proposed description. When the event
+        # names a claim, it settles only that claim; otherwise two agents
+        # proposing different text for the same column would share one
+        # verdict.
+        target = event.payload.get("claim_id")
+        if target is not None and target != claim.claim_id:
+            return None
         return event.payload["verdict"] == VERDICT_ACCEPTED
 
     return None
