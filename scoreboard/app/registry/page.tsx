@@ -107,7 +107,7 @@ export default async function Registry() {
                 </Link>
                 {dossier && (
                   <a href={dossier} target="_blank" rel="noreferrer">
-                    dossier in DataHub &nearr;
+                    dossier in DataHub {"↗"}
                   </a>
                 )}
               </div>
