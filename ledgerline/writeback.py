@@ -31,6 +31,7 @@ from datahub.metadata.schema_classes import (
     PropertyCardinalityClass,
     StructuredPropertiesClass,
     StructuredPropertyDefinitionClass,
+    StructuredPropertySettingsClass,
     StructuredPropertyValueAssignmentClass,
     TagPropertiesClass,
 )
@@ -101,7 +102,12 @@ def ensure_tags(emitter: Any) -> list[str]:
 
 
 def define_trust_properties(emitter: Any) -> list[str]:
-    """Register the structured property definitions used on authored datasets."""
+    """Register the structured property definitions used on authored datasets.
+
+    Every property is surfaced in the asset sidebar summary; the verdict is
+    additionally an asset badge and a search filter, so author trust is
+    visible wherever the dataset appears in the catalog UI.
+    """
     defined = []
     for urn, qualified, display, value_type, description in _PROP_DEFS:
         emitter.emit(
@@ -114,6 +120,18 @@ def define_trust_properties(emitter: Any) -> list[str]:
                     cardinality=PropertyCardinalityClass.SINGLE,
                     entityTypes=["urn:li:entityType:datahub.dataset"],
                     description=description,
+                ),
+            )
+        )
+        is_verdict = urn == PROP_VERDICT
+        emitter.emit(
+            MetadataChangeProposalWrapper(
+                entityUrn=urn,
+                aspect=StructuredPropertySettingsClass(
+                    isHidden=False,
+                    showInAssetSummary=True,
+                    showAsAssetBadge=is_verdict,
+                    showInSearchFilters=is_verdict,
                 ),
             )
         )
