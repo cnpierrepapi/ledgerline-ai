@@ -39,7 +39,7 @@ from ledgerline.agents import (
     TermMapperAgent,
 )
 from ledgerline.claims import ENRICHMENT, ClaimStore
-from ledgerline.llm import LLMClient
+from ledgerline.llm import LLMClient, LLMError
 from ledgerline.mcp_client import DataHubMCP
 from ledgerline.settle import (
     STEWARD_REVIEW,
@@ -195,11 +195,21 @@ def main() -> None:
         ]
 
         # ---- propose + settle, dataset by dataset --------------------------
+        # Resume-safe: an (agent, dataset) pair that already holds claims in
+        # the ledger is skipped, so a crashed run can be re-run without
+        # double-counting proposals in the pool.
         new_claims = []
         for d in datasets:
             print(f"\n=== {d.name} ===")
             for agent, method, extra in agents:
-                claims = getattr(agent, method)(d.urn, *extra)
+                if store.claims(agent_id=agent.agent_id, entity_urn=d.urn):
+                    print(f"  skip  {agent.agent_id:22s} (already claimed)")
+                    continue
+                try:
+                    claims = getattr(agent, method)(d.urn, *extra)
+                except LLMError as e:
+                    print(f"  SKIP  {agent.agent_id:22s} llm error: {str(e)[:60]}")
+                    continue
                 for claim in claims:
                     store.record(claim)
                     accepted = steward.evaluate(world, claim)
