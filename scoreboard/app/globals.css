@@ -388,8 +388,8 @@ a {
 .glow {
   position: absolute;
   top: -160px;
-  left: -220px;
-  right: -220px;
+  left: 0;
+  right: 0;
   height: 520px;
   background: radial-gradient(
     620px 340px at 28% 22%,
@@ -826,6 +826,10 @@ a {
   font-size: 12px;
   letter-spacing: 0.14em;
   margin-top: 10px;
+}
+
+.rail-steps {
+  min-width: 0;
 }
 
 .rail-step {
