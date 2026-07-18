@@ -16,8 +16,6 @@ and descriptions read through the MCP server.
 
 from __future__ import annotations
 
-import json
-import re
 import time
 from typing import Any
 
@@ -25,6 +23,7 @@ from ..claims import BLAST_RADIUS, Claim
 from ..llm import LLMClient
 from ..mcp_client import DataHubMCP
 from ..simulator.runner import normalize_directional
+from .common import as_text, clamp_confidence, extract_dataset_urns
 
 _SYSTEM = """You are a senior data reliability engineer assessing the impact of a schema change in a data warehouse.
 
@@ -36,8 +35,6 @@ Reply with ONLY a JSON object, no prose:
 {"assessments": [{"dataset_urn": "...", "will_break": true|false, "confidence": 0.5-0.95, "reason": "one short sentence"}]}
 
 Confidence is your probability that your will_break verdict is right. Include every candidate exactly once."""
-
-_URN_RE = re.compile(r"urn:li:dataset:\([^)]*\)")
 
 
 class BlastRadiusAgent:
@@ -52,22 +49,10 @@ class BlastRadiusAgent:
 
     def downstream_candidates(self, changed_urn: str) -> list[str]:
         lineage = self.mcp.get_lineage(changed_urn, upstream=False, max_hops=3)
-        text = lineage if isinstance(lineage, str) else json.dumps(lineage)
-        urns = [u for u in _URN_RE.findall(text) if u != changed_urn]
-        # preserve discovery order, drop duplicates
-        seen: set[str] = set()
-        out = []
-        for u in urns:
-            if u not in seen:
-                seen.add(u)
-                out.append(u)
-        return out
+        return extract_dataset_urns(lineage, exclude=[changed_urn])
 
     def schema_evidence(self, urn: str) -> str:
-        fields = self.mcp.list_schema_fields(urn)
-        if not isinstance(fields, str):
-            fields = json.dumps(fields)
-        return fields[:2500]
+        return as_text(self.mcp.list_schema_fields(urn), 2500)
 
     # -- the one judgment call ----------------------------------------------
 
@@ -108,10 +93,7 @@ class BlastRadiusAgent:
                 will_break, conf, reason = False, 0.5, "model omitted candidate"
             else:
                 will_break = bool(a.get("will_break", False))
-                try:
-                    conf = float(a.get("confidence", 0.6))
-                except (TypeError, ValueError):
-                    conf = 0.6
+                conf = clamp_confidence(a.get("confidence"), 0.0, 1.0)
                 reason = str(a.get("reason", ""))[:300]
             will_break, conf = normalize_directional(will_break, conf)
             conf = min(max(conf, 0.5), 0.95)
