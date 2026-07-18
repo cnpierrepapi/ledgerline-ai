@@ -31,11 +31,25 @@ def _server_command() -> str:
 
 
 class DataHubMCP:
-    """Sync facade over an MCP stdio session. Use as a context manager."""
+    """Sync facade over an MCP stdio session. Use as a context manager.
 
-    def __init__(self, gms_url: Optional[str] = None, mutations: bool = True):
+    Defaults to spawning mcp-server-datahub; pass command/args/extra_env to
+    front any other stdio MCP server (e.g. the ledgerline trust gateway).
+    """
+
+    def __init__(
+        self,
+        gms_url: Optional[str] = None,
+        mutations: bool = True,
+        command: Optional[str] = None,
+        args: Optional[list[str]] = None,
+        extra_env: Optional[dict[str, str]] = None,
+    ):
         self.gms_url = gms_url or os.environ.get("DATAHUB_GMS_URL", "http://localhost:8080")
         self.mutations = mutations
+        self.command = command or _server_command()
+        self.args = args or []
+        self.extra_env = extra_env or {}
         self._loop = asyncio.new_event_loop()
         self._session: Optional[ClientSession] = None
         self._cm_stack: list[Any] = []
@@ -50,11 +64,13 @@ class DataHubMCP:
 
     async def _start(self) -> None:
         params = StdioServerParameters(
-            command=_server_command(),
+            command=self.command,
+            args=self.args,
             env={
                 **os.environ,
                 "DATAHUB_GMS_URL": self.gms_url,
                 "TOOLS_IS_MUTATION_ENABLED": "true" if self.mutations else "false",
+                **self.extra_env,
             },
         )
         stdio_cm = stdio_client(params)
@@ -72,6 +88,11 @@ class DataHubMCP:
                 await cm.__aexit__(None, None, None)
             except Exception:
                 pass
+
+    def list_tools(self) -> list[Any]:
+        assert self._session is not None, "use DataHubMCP as a context manager"
+        result = self._loop.run_until_complete(self._session.list_tools())
+        return result.tools
 
     def call(self, tool: str, args: dict[str, Any]) -> Any:
         """Call a tool; return parsed JSON when the response is JSON text."""
