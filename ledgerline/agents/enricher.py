@@ -102,6 +102,7 @@ class EnricherAgent:
                     claim_type=ENRICHMENT,
                     entity_urn=dataset_urn,
                     prediction={
+                        "kind": "column_doc",
                         "column": column,
                         "description": str(p["description"])[:500],
                     },
