@@ -16,9 +16,10 @@ URN_B = "urn:li:dataset:(urn:li:dataPlatform:postgres,db.b,PROD)"
 
 
 class FakeResult:
-    def __init__(self, text: str, is_error: bool = False):
+    def __init__(self, text: str, is_error: bool = False, structured=None):
         self.content = [types.TextContent(type="text", text=text)]
         self.isError = is_error
+        self.structuredContent = structured
 
 
 class FakeDownstream:
@@ -192,6 +193,21 @@ def test_enforce_allows_reads_and_neutral_agent_above_floor(tmp_path):
         )
     )  # neutral trust 50 >= 40
     assert len(store.claims()) == 1
+
+
+def test_structured_content_forwarded_with_annotation(tmp_path):
+    structured = {"results": [URN_A]}
+    downstream = FakeDownstream(FakeResult(URN_A, structured=structured))
+    gateway, _ = gw(
+        tmp_path,
+        downstream,
+        trust_lookup=lambda u: {"agent": "a", "trust": 60.0, "verdict": "skilled"},
+    )
+    out = asyncio.run(gateway.handle("search", {}))
+    assert isinstance(out, tuple)
+    content, forwarded = out
+    assert forwarded == structured
+    assert "ledgerline trust context" in content[-1].text
 
 
 def test_downstream_error_propagates(tmp_path):

@@ -264,6 +264,13 @@ class TrustGateway:
             context = self.trust_context(text)
             if context:
                 content.append(types.TextContent(type="text", text=context))
+
+        # tools that declare an outputSchema must answer with structured
+        # content; forward the downstream's structured payload untouched
+        # (the trust block rides in the content stream alongside it)
+        structured = getattr(result, "structuredContent", None)
+        if structured is not None:
+            return content, structured
         return content
 
 
