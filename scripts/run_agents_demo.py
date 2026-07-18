@@ -18,11 +18,11 @@ Run on the box:
 
 from __future__ import annotations
 
+import json
 import os
 import time
 
 from ledgerline.agents import EnricherAgent, FreshnessSentinelAgent, TriageAgent
-from ledgerline.agents.enricher import undocumented_columns
 from ledgerline.claims import ClaimStore
 from ledgerline.llm import LLMClient
 from ledgerline.mcp_client import DataHubMCP
@@ -124,30 +124,28 @@ def main() -> None:
                     accepted.append(settled)
         scorecard(store, enricher.agent_id, world, "enricher")
 
-        # prove the mutation path: apply accepted docs, verify one, revert all
+        # prove the mutation path: apply accepted docs, verify one, revert all.
+        # verification reads get_entities: update_description writes the
+        # editable overlay aspect, which list_schema_fields does not merge.
         if accepted:
             for claim in accepted:
                 enricher.apply(claim)
             probe = accepted[0]
-            schema = mcp.list_schema_fields(probe.entity_urn)
-            live = {
-                f["fieldPath"]: f.get("description")
-                for f in schema.get("fields", [])
-            }.get(probe.prediction["column"])
+            snapshot = json.dumps(mcp.get_entities([probe.entity_urn]))
+            wrote = probe.prediction["description"][:40] in snapshot
             print(
                 f"\n  applied {len(accepted)} accepted descriptions via update_description"
             )
             print(
                 f"  verify {world.by_urn(probe.entity_urn).name}."
-                f"{probe.prediction['column']} now reads: {str(live)[:70]}"
+                f"{probe.prediction['column']} live in catalog: {wrote}"
             )
             for claim in accepted:
                 enricher.unapply(claim)
-            still = undocumented_columns(mcp.list_schema_fields(probe.entity_urn))
+            snapshot = json.dumps(mcp.get_entities([probe.entity_urn]))
             print(
-                f"  reverted for idempotent re-runs "
-                f"({probe.prediction['column']} undocumented again: "
-                f"{probe.prediction['column'] in still})"
+                "  reverted for idempotent re-runs (description gone: "
+                f"{probe.prediction['description'][:40] not in snapshot})"
             )
 
         # ---- incident triage ----------------------------------------------
