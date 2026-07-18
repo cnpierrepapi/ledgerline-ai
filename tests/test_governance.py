@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from ledgerline.agents import (
     DomainAssignerAgent,
+    NaiveGovernanceAgent,
     OwnerRecommenderAgent,
     PiiTaggerAgent,
     TableDescriberAgent,
@@ -150,6 +151,33 @@ def test_term_mapper_dedupes_and_filters():
     claims = agent.propose(URN_A, ["Customer Email", "Customer Country"])
     assert len(claims) == 1
     assert claims[0].prediction["term"] == "Customer Email"
+
+
+def test_naive_rival_is_deterministic_and_hits_the_traps():
+    mcp = FakeMCP(schemas={URN_A: SCHEMA_A})
+    agent = NaiveGovernanceAgent(mcp, "naive-governance")
+    claims = agent.propose_all(
+        URN_A,
+        teams=["commerce-analytics", "data-platform"],
+        domains=["Commerce", "Customers"],
+        terms=["Customer Country", "Active Customers"],
+    )
+    kinds = [c.prediction["kind"] for c in claims]
+    assert kinds.count("table_doc") == 1
+    assert kinds.count("owner") == 1 and kinds.count("domain") == 1
+    # the naive pattern matcher flags the pseudonymous key and the demographic
+    pii = {c.prediction["column"]: c.prediction["pii_type"] for c in claims if c.prediction["kind"] == "pii"}
+    assert pii["customer_id"] == "national_id"
+    assert pii["country"] == "address"
+    assert pii["email"] == "email"
+    # same input, same claims
+    again = agent.propose_all(
+        URN_A,
+        teams=["commerce-analytics", "data-platform"],
+        domains=["Commerce", "Customers"],
+        terms=["Customer Country", "Active Customers"],
+    )
+    assert [c.prediction for c in again] == [c.prediction for c in claims]
 
 
 # -- world truth and the steward ---------------------------------------------

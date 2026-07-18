@@ -1,6 +1,7 @@
 from .blastradius import BlastRadiusAgent
 from .domainassign import DomainAssignerAgent
 from .enricher import EnricherAgent
+from .naive import NaiveGovernanceAgent
 from .ownerrec import OwnerRecommenderAgent
 from .piitagger import PiiTaggerAgent
 from .sentinel import FreshnessSentinelAgent
@@ -12,6 +13,7 @@ __all__ = [
     "BlastRadiusAgent",
     "DomainAssignerAgent",
     "EnricherAgent",
+    "NaiveGovernanceAgent",
     "OwnerRecommenderAgent",
     "PiiTaggerAgent",
     "FreshnessSentinelAgent",

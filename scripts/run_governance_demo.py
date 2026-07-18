@@ -33,6 +33,7 @@ from datahub.metadata.schema_classes import (
 
 from ledgerline.agents import (
     DomainAssignerAgent,
+    NaiveGovernanceAgent,
     OwnerRecommenderAgent,
     PiiTaggerAgent,
     TableDescriberAgent,
@@ -192,6 +193,12 @@ def main() -> None:
             (OwnerRecommenderAgent(mcp, llm, "owner-recommender-live"), "propose", (teams,)),
             (DomainAssignerAgent(mcp, llm, "domain-assigner-live"), "propose", (domains,)),
             (TermMapperAgent(mcp, llm, "term-mapper-live"), "propose", (terms,)),
+            # the heuristic rival that keeps the acceptance pool honest (G-19)
+            (
+                NaiveGovernanceAgent(mcp, "naive-governance-live"),
+                "propose_all",
+                (teams, domains, terms),
+            ),
         ]
 
         # ---- propose + settle, dataset by dataset --------------------------
@@ -257,10 +264,14 @@ def main() -> None:
             )
 
         # ---- writeback of accepted artifacts ------------------------------
+        # All accepted governance claims in the ledger, not just this run's:
+        # a crashed run settles claims without reaching writeback, and every
+        # write below is an idempotent upsert, so replaying is safe.
         print("\n=== writeback: accepted artifacts into the catalog ===")
+        kinds = {"table_doc", "pii", "owner", "domain", "term"}
         applied = 0
-        for claim in new_claims:
-            if claim.correct:
+        for claim in store.claims(claim_type=ENRICHMENT, settled=True):
+            if claim.correct and claim.prediction.get("kind") in kinds:
                 label = writeback_accepted(mcp, claim)
                 ds = world.by_urn(claim.entity_urn).name
                 print(f"  wrote {label} -> {ds}")
@@ -283,6 +294,8 @@ def main() -> None:
                 checks["glossary term"] = "SettledPaymentAmount" in got or "RecognizedRevenue" in got
             for label, ok in checks.items():
                 print(f"  {'PASS' if ok else 'FAIL'}  {name}: {label}")
+            if not all(checks.values()):
+                print(f"  ...response snippet: {got[:600]}")
     print("\ndone")
 
 
