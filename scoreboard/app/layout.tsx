@@ -29,6 +29,7 @@ export default function RootLayout({
             </Link>
             <nav className="topnav">
               <Link href="/board">Live board</Link>
+              <Link href="/registry">Registry</Link>
               <Link href="/proof">Proof</Link>
               <Link href="/methodology">Methodology</Link>
               <a

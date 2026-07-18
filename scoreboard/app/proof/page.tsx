@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import CredsHint from "@/components/proof/CredsHint";
 import LiveStatus from "@/components/proof/LiveStatus";
 import { GATEWAY_TRANSCRIPT } from "@/components/proof/transcript";
 import {
@@ -9,6 +10,7 @@ import {
   getAgent,
   getClaims,
 } from "@/lib/data";
+import { DOSSIER_URNS } from "@/lib/dossiers";
 
 export const revalidate = 60;
 
@@ -25,26 +27,9 @@ const links = {
   rawOrders: `${DATAHUB_URL}/dataset/${encodeURIComponent(RAW_ORDERS_URN)}/Schema`,
   search: `${DATAHUB_URL}/search?query=lineworld`,
   tag: `${DATAHUB_URL}/tag/${encodeURIComponent("urn:li:tag:ledgerline-unproven")}`,
-  dossiers: [
-    {
-      agent: "enricher-live",
-      urn: "urn:li:document:shared-e4eff459-fbbb-4c40-83fc-6355260d3a17",
-    },
-    {
-      agent: "freshness-sentinel-live",
-      urn: "urn:li:document:shared-7f8fde2d-874b-496e-9a6b-c473e34975d7",
-    },
-    {
-      agent: "incident-triage-live",
-      urn: "urn:li:document:shared-755d6e23-5eeb-4c4e-b52b-3460e6d080c6",
-    },
-    {
-      agent: "blast-radius-live",
-      urn: "urn:li:document:shared-93d3a5e1-2de9-4c42-9130-db8ea5262c5e",
-    },
-  ].map((d) => ({
-    ...d,
-    url: `${DATAHUB_URL}/document/${encodeURIComponent(d.urn)}`,
+  dossiers: Object.entries(DOSSIER_URNS).map(([agent, urn]) => ({
+    agent,
+    url: `${DATAHUB_URL}/document/${encodeURIComponent(urn)}`,
   })),
 };
 
@@ -72,8 +57,9 @@ export default async function Proof() {
         <p>
           Every claim on this page is paired with the artifact it produced
           inside a real DataHub instance, running in public. The deep links
-          open that instance; the screenshots were captured from it and stand
-          on their own if it is ever down.
+          open that instance: sign in once with the shared read login and
+          DataHub drops you exactly on the linked page. The screenshots were
+          captured from it and stand on their own if it is ever down.
         </p>
         <div className="proof-toolbar">
           <LiveStatus />
@@ -104,6 +90,7 @@ export default async function Proof() {
             <div className="deep-links">
               <DeepLink href={links.rawOrders}>open raw_orders in DataHub</DeepLink>
             </div>
+            <CredsHint />
             {enrichmentClaims.length > 0 && (
               <div className="card claims-mini">
                 {enrichmentClaims.map((c) => (
@@ -166,6 +153,7 @@ export default async function Proof() {
               <DeepLink href={links.search}>search lineworld</DeepLink>
               <DeepLink href={links.tag}>the ledgerline-unproven tag</DeepLink>
             </div>
+            <CredsHint />
           </div>
           <figure className="evidence">
             <Image
@@ -213,6 +201,7 @@ export default async function Proof() {
                 </DeepLink>
               ))}
             </div>
+            <CredsHint />
           </div>
           <figure className="evidence">
             <Image
@@ -303,6 +292,7 @@ export default async function Proof() {
                 the method
               </Link>
             </div>
+            <CredsHint />
           </div>
           <div className="term">
             <div>

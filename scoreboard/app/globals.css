@@ -1231,3 +1231,140 @@ a {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+.creds-hint {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--faint);
+  margin-top: 10px;
+}
+
+.creds-hint b {
+  color: var(--muted);
+}
+
+.copy-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin-left: 8px;
+  cursor: pointer;
+}
+
+.copy-btn:hover {
+  border-color: var(--accent);
+}
+
+/* registry page */
+
+.reg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 18px;
+}
+
+.reg-card {
+  padding: 20px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.reg-card.blocked {
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.reg-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.reg-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: 16px;
+  align-items: start;
+}
+
+.reg-trust {
+  font-family: var(--mono);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.reg-trust-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+  margin-top: 6px;
+}
+
+.reg-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 14px;
+}
+
+.reg-stats > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  max-width: 190px;
+}
+
+.reg-stats .k {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.reg-stats .v {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+.reg-stats .v small {
+  color: var(--faint);
+}
+
+.spark {
+  width: 120px;
+  height: 120px;
+}
+
+.reg-snippet {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--muted);
+  background: #070a0f;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 13px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.reg-links {
+  display: flex;
+  gap: 18px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.reg-links a {
+  color: var(--accent);
+}
