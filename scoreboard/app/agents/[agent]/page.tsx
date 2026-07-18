@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import CalibrationChart from "@/components/CalibrationChart";
 import VerdictBadge from "@/components/VerdictBadge";
 import {
-  datasetName,
+  describeClaim,
   getAgent,
   getCalibration,
   getClaims,
@@ -13,28 +13,6 @@ export const revalidate = 60;
 
 function fmt(v: number | null, digits = 3): string {
   return v === null || v === undefined ? "-" : v.toFixed(digits);
-}
-
-function describeClaim(
-  claimType: string,
-  prediction: Record<string, unknown>,
-  entityUrn: string
-): string {
-  const ds = datasetName(entityUrn);
-  if (claimType === "blast_radius") {
-    return `${prediction["will_break"] ? "break" : "survive"}: ${ds} after dropping ${prediction["dropped_column"]}`;
-  }
-  if (claimType === "freshness_sla") {
-    return `${prediction["will_miss_sla"] ? "miss" : "hit"} SLA: ${ds} (day ${prediction["day"]})`;
-  }
-  if (claimType === "root_cause") {
-    return `root cause of ${ds}: ${datasetName(String(prediction["root_cause_urn"] ?? ""))} (1 of ${prediction["n_candidates"]})`;
-  }
-  if (claimType === "enrichment") {
-    const implicit = prediction["implicit"] ? " (implicit, via gateway)" : "";
-    return `document ${ds}.${prediction["column"]}${implicit}`;
-  }
-  return `${claimType} on ${ds}`;
 }
 
 export default async function AgentPage({
@@ -58,7 +36,7 @@ export default async function AgentPage({
 
   return (
     <main>
-      <Link href="/" className="crumb">
+      <Link href="/board" className="crumb">
         &larr; all agents
       </Link>
       <section className="hero">

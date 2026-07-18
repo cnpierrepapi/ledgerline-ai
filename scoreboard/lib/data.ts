@@ -79,7 +79,35 @@ export async function getClaims(agentId: string): Promise<ClaimRow[]> {
   );
 }
 
+export async function getRecentClaims(limit = 24): Promise<ClaimRow[]> {
+  return rest<ClaimRow>(
+    `ll_claims?select=*&order=created_ts.desc&limit=${limit}`
+  );
+}
+
 export function datasetName(urn: string): string {
   const parts = urn.split(",");
   return parts.length > 1 ? parts[1] : urn;
+}
+
+export function describeClaim(
+  claimType: string,
+  prediction: Record<string, unknown>,
+  entityUrn: string
+): string {
+  const ds = datasetName(entityUrn);
+  if (claimType === "blast_radius") {
+    return `${prediction["will_break"] ? "break" : "survive"}: ${ds} after dropping ${prediction["dropped_column"]}`;
+  }
+  if (claimType === "freshness_sla") {
+    return `${prediction["will_miss_sla"] ? "miss" : "hit"} SLA: ${ds} (day ${prediction["day"]})`;
+  }
+  if (claimType === "root_cause") {
+    return `root cause of ${ds}: ${datasetName(String(prediction["root_cause_urn"] ?? ""))} (1 of ${prediction["n_candidates"]})`;
+  }
+  if (claimType === "enrichment") {
+    const implicit = prediction["implicit"] ? " (implicit, via gateway)" : "";
+    return `document ${ds}.${prediction["column"]}${implicit}`;
+  }
+  return `${claimType} on ${ds}`;
 }

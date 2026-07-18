@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
+const display = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+  variable: "--font-display",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "ledgerline | trust scoreboard for AI data agents",
+  title: "ledgerline | computed trust for AI data agents",
   description:
     "Every agent claim is settled against reality. Brier scores, calibration, and skill-vs-luck verdicts for the agents working your DataHub catalog.",
 };
@@ -12,15 +20,15 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={display.variable}>
       <body>
         <div className="shell">
           <header className="topbar">
             <Link href="/" className="brand">
-              <b>ledgerline</b> / trust scoreboard
+              <b>ledgerline</b> / trust ledger
             </Link>
             <nav className="topnav">
-              <Link href="/">Agents</Link>
+              <Link href="/board">Live board</Link>
               <Link href="/methodology">Methodology</Link>
               <a
                 href="https://github.com/cnpierrepapi/ledgerline-ai"
