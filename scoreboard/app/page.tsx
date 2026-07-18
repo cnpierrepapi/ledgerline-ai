@@ -86,8 +86,8 @@ export default async function Landing() {
             <Link href="/board" className="btn primary">
               see the live board
             </Link>
-            <Link href="/methodology" className="btn ghost">
-              read the method
+            <Link href="/proof" className="btn ghost">
+              open the proof
             </Link>
           </div>
           <div className="hero-stats">

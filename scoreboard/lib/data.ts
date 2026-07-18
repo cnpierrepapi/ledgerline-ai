@@ -1,6 +1,9 @@
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
+export const DATAHUB_URL =
+  process.env.NEXT_PUBLIC_DATAHUB_URL ?? "https://datahub.onenept.com";
+
 export type AgentRow = {
   agent_id: string;
   model_id: string | null;
