@@ -1382,3 +1382,9 @@ a {
     font-size: 13px;
   }
 }
+
+@media (min-width: 1440px) {
+  .shell {
+    max-width: 1300px;
+  }
+}
