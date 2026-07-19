@@ -27,6 +27,12 @@ FRESHNESS_SLA = "freshness_sla"
 ENRICHMENT = "enrichment"
 ROOT_CAUSE = "root_cause"
 
+# Meta claim types: claims about other agents' claims and about the catalog's
+# provenance. Directional, so the default 0.5 luck baseline applies.
+REVERT_FORECAST = "revert_forecast"
+ARBITRATION = "arbitration"
+TAMPER_AUDIT = "tamper_audit"
+
 
 class Claim(BaseModel):
     """One falsifiable statement by one agent about one entity."""
