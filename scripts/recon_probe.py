@@ -7,6 +7,7 @@ it. Run on the box:
 """
 
 import os
+import time
 from pathlib import Path
 
 from ledgerline.claims import ClaimStore
@@ -16,13 +17,23 @@ from ledgerline.skill import skill_report
 
 GMS = os.environ.get("DATAHUB_GMS_URL", "http://localhost:8080")
 DB = os.environ.get("RECON_DB", "recon.db")
+# The survival window is a config knob: how long a write must stand unchallenged
+# to count as accepted. The default is 7 days; a young demo catalog uses a
+# shorter one. Real timestamps either way; only the acceptance horizon changes.
+SURVIVAL_DAYS = int(os.environ.get("RECON_SURVIVAL_DAYS", "7"))
 
 
 def main() -> None:
     Path(DB).unlink(missing_ok=True)
+    now = time.time()
     changes = read_changes(GMS, lineworld_dataset_urns())
+    if changes:
+        span = (max(c.ts for c in changes) - min(c.ts for c in changes)) / 86400
+        age = (now - max(c.ts for c in changes)) / 86400
+        print(f"history spans {span:.2f} days; newest change is {age:.2f} days old")
+    print(f"survival window: {SURVIVAL_DAYS} day(s)")
     with ClaimStore(DB) as store:
-        summary = load_into_store(store, changes)
+        summary = load_into_store(store, changes, now_ts=now, survival_days=SURVIVAL_DAYS)
         print(f"changes read: {len(changes)}")
         print(f"reconstructed: {summary}")
         report = skill_report(store, min_settled=1)
